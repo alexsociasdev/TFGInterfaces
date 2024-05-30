@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, firestore } from '../utils/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const Home = () => {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState(''); // Puede ser email o nombre de usuario
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +20,6 @@ const Home = () => {
     try {
       let email = identifier;
 
-      // Verifica si el identificador es un nombre de usuario
       if (!identifier.includes('@')) {
         const q = query(collection(firestore, 'students'), where('username', '==', identifier));
         const querySnapshot = await getDocs(q);
@@ -58,6 +57,34 @@ const Home = () => {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!identifier) {
+      alert('Por favor, ingrese su email o nombre de usuario para recuperar la contraseña.');
+      return;
+    }
+
+    try {
+      let email = identifier;
+
+      // Verifica si el identificador es un nombre de usuario
+      if (!identifier.includes('@')) {
+        const q = query(collection(firestore, 'students'), where('username', '==', identifier));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          email = querySnapshot.docs[0].data().tutorEmail;
+        } else {
+          throw new Error('Nombre de usuario no encontrado');
+        }
+      }
+
+      await sendPasswordResetEmail(auth, email);
+      alert('Correo de recuperación de contraseña enviado.');
+    } catch (error) {
+      console.error('Error al enviar el correo de recuperación de contraseña: ', error);
+      alert('Error al enviar el correo de recuperación de contraseña: ' + error.message);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen p-4 bg-gray-100">
       <div className="mb-4">
@@ -78,7 +105,7 @@ const Home = () => {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
         />
-        <div className="flex space-x-4">
+        <div className="flex justify-center space-x-4">
           <button 
             type="submit"
             className={`px-4 py-2 bg-green-500 text-white font-semibold rounded shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 ${loading ? 'cursor-not-allowed' : ''}`}
@@ -95,6 +122,13 @@ const Home = () => {
           </button>
         </div>
       </form>
+      <button
+        type="button"
+        onClick={handlePasswordReset}
+        className="mt-4 px-4 py-2 bg-green-500 text-white font-semibold rounded shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      >
+        Recuperar contraseña
+      </button>
     </div>
   );
 };
