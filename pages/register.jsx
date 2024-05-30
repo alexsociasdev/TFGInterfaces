@@ -1,8 +1,12 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, firestore } from '../utils/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { HiInformationCircle } from "react-icons/hi";
+import { Alert, Checkbox } from "flowbite-react";
 
 const Register = () => {
   const router = useRouter();
@@ -21,25 +25,59 @@ const Register = () => {
     username: '',
     password: '',
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  const validateForm = () => {
+    if (!formData.studentName) return 'El nombre del estudiante es obligatorio';
+    if (!formData.studentLastName) return 'Los apellidos del estudiante son obligatorios';
+    if (!formData.studentAge) return 'La edad del estudiante es obligatoria';
+    if (!formData.studentAddress) return 'La dirección del estudiante es obligatoria';
+    if (!formData.studentDNI) return 'El DNI del estudiante es obligatorio';
+    if (!formData.tutorName) return 'El nombre del tutor es obligatorio';
+    if (!formData.tutorLastName) return 'Los apellidos del tutor son obligatorios';
+    if (!formData.tutorEmail) return 'El email del tutor es obligatorio';
+    if (!formData.tutorPhone) return 'El teléfono del tutor es obligatorio';
+    if (!formData.enrollment) return 'La matrícula es obligatoria';
+    if (!formData.iban) return 'El IBAN es obligatorio';
+    if (!formData.username) return 'El nombre de usuario es obligatorio';
+    if (!formData.password) return 'La contraseña es obligatoria';
+    return '';
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
+  const [isChecked, setIsChecked] = useState(false);
+
+  const handleCheckboxChange = () => {
+    setIsChecked(!isChecked);
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    const updatedAddress = isChecked ? `${formData.studentAddress}#yes` : formData.studentAddress;
+
     try {
-      // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, formData.tutorEmail, formData.password);
       const user = userCredential.user;
 
-      // Guardar datos del alumno en Firestore
       await setDoc(doc(firestore, 'students', user.uid), {
         studentName: formData.studentName,
         studentLastName: formData.studentLastName,
         studentAge: formData.studentAge,
-        studentAddress: formData.studentAddress,
+        studentAddress: updatedAddress,
         studentDNI: formData.studentDNI,
         tutorName: formData.tutorName,
         tutorLastName: formData.tutorLastName,
@@ -54,13 +92,21 @@ const Register = () => {
       router.push('/menuuser');
     } catch (error) {
       console.error('Error al registrar: ', error);
-      alert('Error al registrar: ' + error.message);
+      setError('Error al registrar: ' + error.message);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center p-4 bg-gray-100">
-      <h1 className="text-2xl font-bold mb-4 text-green-500">Registro de Usuario</h1>
+      <h1 className="text-2xl font-bold mb-4 text-green-500">Registro de Usuario
+      </h1>
+      {error && (
+        <div className="w-full max-w-md mx-auto mb-4">
+          <Alert color="failure" icon={HiInformationCircle} className="text-center p-4 text-xl">
+            <span className="font-medium text-red-700">{error}</span>
+          </Alert>
+        </div>
+      )}
       <form className="mb-4 w-full max-w-xs" onSubmit={handleRegister}>
         <div className="mb-4">
           <h5 className="text-xl font-bold mb-4 text-green-500">Datos del alumno</h5>
@@ -153,7 +199,7 @@ const Register = () => {
             name="enrollment"
             value={formData.enrollment}
             onChange={handleChange}
-            placeholder="Matrícula" 
+            placeholder="Matrícula"
             className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
           />
           <label className="block text-gray-700">IBAN</label>
@@ -186,7 +232,22 @@ const Register = () => {
             placeholder="Contraseña" 
             className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
           />
+            <label htmlFor="checkbox" className="block text-gray-700">
+              Familia numerosa
+            </label>
+            <Checkbox
+              id="checkbox"
+              checked={isChecked}
+              onChange={handleCheckboxChange}
+            >
+            </Checkbox>
         </div>
+        <button
+          onClick={handleBack}
+          className="px-4 py-2 bg-gray-500 text-white font-semibold rounded shadow hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+        >
+          Atrás
+        </button>
         <button 
           type="submit"
           className="px-4 py-2 bg-green-500 text-white font-semibold rounded shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"

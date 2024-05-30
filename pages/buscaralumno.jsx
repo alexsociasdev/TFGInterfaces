@@ -71,7 +71,7 @@ const BuscarAlumno = () => {
           <p className="text-gray-800"><strong>Nombre:</strong> {student.studentName}</p>
           <p className="text-gray-800"><strong>Apellidos:</strong> {student.studentLastName}</p>
           <p className="text-gray-800"><strong>Edad:</strong> {student.studentAge}</p>
-          <p className="text-gray-800"><strong>Dirección:</strong> {student.studentAddress}</p>
+          <p className="text-gray-800"><strong>Dirección:</strong> {student.studentAddress.replace('#yes', '')}</p>
           <p className="text-gray-800"><strong>DNI:</strong> {student.studentDNI}</p>
           <p className="text-gray-800"><strong>Nombre del tutor:</strong> {student.tutorName}</p>
           <p className="text-gray-800"><strong>Apellidos del tutor:</strong> {student.tutorLastName}</p>

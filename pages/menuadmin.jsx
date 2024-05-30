@@ -22,6 +22,9 @@ const MenuAdmin = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen p-4 bg-gray-100">
       <h1 className="text-2xl font-bold mb-4 text-green-500">Menú de administrador</h1>
+      <div className="mb-4">
+        <img src="/img/admin.jpg" alt="Perfil" className="w-24 h-24 object-cover rounded-full" />
+      </div>
       <div className="mb-4 w-full max-w-xs">
         <button
           onClick={() => navigateTo('/validarfacturas')}

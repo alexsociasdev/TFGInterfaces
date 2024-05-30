@@ -1,11 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { firestore, auth } from '../utils/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 
 const Tienda = () => {
   const router = useRouter();
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [studentAddress, setStudentAddress] = useState('');
+
+  useEffect(() => {
+    const fetchStudentAddress = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const studentDoc = await getDoc(doc(firestore, 'students', user.uid));
+          if (studentDoc.exists()) {
+            setStudentAddress(studentDoc.data().studentAddress);
+          }
+        }
+      } catch (error) {
+        console.error('Error al obtener la dirección del estudiante: ', error);
+      }
+    };
+
+    fetchStudentAddress();
+  }, []);
 
   const handleBack = () => {
     router.back();
@@ -16,7 +35,11 @@ const Tienda = () => {
 
     try {
       const user = auth.currentUser;
-      const totalPrice = selectedProducts.reduce((total, product) => total + parseFloat(product.precio.replace('€', '')), 0);
+      let totalPrice = selectedProducts.reduce((total, product) => total + parseFloat(product.precio.replace('€', '')), 0);
+
+      if (studentAddress.includes('#yes')) {
+        totalPrice = totalPrice * 0.8; // Aplicar descuento del 20%
+      }
 
       await addDoc(collection(firestore, 'orders'), {
         userId: user.uid,
@@ -47,22 +70,50 @@ const Tienda = () => {
   const productos = [
     {
       id: 1,
-      nombre: 'Camiseta azul',
-      precio: '10€',
+      nombre: 'Tiquet de comedor',
+      precio: '8€',
       cantidad: '1 ud',
-      imagen: '/img/logo.png',
+      imagen: '/img/ticket.jpg',
     },
     {
       id: 2,
-      nombre: 'Tiquet de comedor',
-      precio: '10€',
+      nombre: 'Camiseta',
+      precio: '20€',
       cantidad: '1 ud',
-      imagen: '/img/logo.png',
+      imagen: '/img/camiseta.jpg',
     },
+    {
+      id: 3,
+      nombre: 'calçons d’esport',
+      precio: '25€',
+      cantidad: '1 ud',
+      imagen: '/img/pantalones.jpg',
+    },
+    {
+      id: 4,
+      nombre: 'jaqueta',
+      precio: '25€',
+      cantidad: '1 ud',
+      imagen: '/img/jaqueta.jpg',
+    },
+    {
+      id: 5,
+      nombre: 'baberall',
+      precio: '15€',
+      cantidad: '1 ud',
+      imagen: '/img/babero.jpg',
+    },
+    {
+      id: 6,
+      nombre: 'assegurança',
+      precio: '23€',
+      cantidad: '1 ud',
+      imagen: '/img/seguro.png',
+    }
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen p-4 bg-gray-100">
+    <div className="flex flex-col items-center justify-center p-4 bg-gray-100">
       <h1 className="text-2xl font-bold mb-4 text-green-500">Comprar</h1>
       <div className="mb-4 w-full max-w-xs">
         {productos.map((producto) => (
